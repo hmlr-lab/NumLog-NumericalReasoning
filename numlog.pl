@@ -4,7 +4,7 @@
 %                                            The HMLR lab                                               %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-:- module(numlog, [learn/2,learn/3,e_eq/2,e_leq/2,e_geq/2,e_inRange/2]).
+:- module(numlog, [learn/2,learn/3,user:eq/2,user:leq/2,user:geq/2,user:inRange/2]).
 
 %Background knowledge
 round(X,Y,D) :- Z is X * 10^D, round(Z, ZA), Y is ZA / 10^D.%disabled as two value may be closed to each other
@@ -20,16 +20,16 @@ geq([H|_],H).%:-round(H,H1,2).
 inRange(List,A):-
     [First|_] = List, 
     last(List,Last),
-    Mid is (Last - First) / 2,
-    Range is Mid - Last,
+    Mid is (Last + First) / 2,
+    Range is Last - Mid,
     concat(Mid, '±', Atom),
     concat(Atom, Range, A).
 
 %evaluation 
-e_eq(A,A).
-e_leq(A,B):-A=<B.
-e_geq(A,B):-A>=B.
-e_inRange(Val,A):-
+user:eq(A,A).
+user:leq(A,B):-A=<B.
+user:geq(A,B):-A>=B.
+user:inRange(Val,A):-
     split_string(A, '±','',[AVal,Range]),
     number_string(A_Val, AVal),
     number_string(A_Range, Range),
@@ -107,9 +107,9 @@ prove([],[_|T],Temp):-
 prove([H|T],[EH|ET],Temp):-
         H =.. [Func,_,Val],
         Var = EH,
-        atom_concat(e_, Func, Atom),
-        Check =.. [Atom,Var,Val],
-        (not(call(Check))->
+        %atom_concat(user:Func, Atom),
+        Check =.. [Func,Var,Val],
+        (not(call(user:Check))->
             prove(T,[EH|ET],Temp);
             fail).    
 
@@ -211,18 +211,18 @@ groupExamplesAbduction([H|T],[NH|NT],Range,Temp,Group,Group2):-
     ),
     groupExamplesAbduction(TT,Nexamples,Range,Temp1,Group1,Group2).
 
-
-
-learn(Pos,Neg,Range):-
+%Abduction learn
+learn(Pos,Neg,Telorance):-
     append(Pos, Neg, AllExamples),
     %denois(Pos,Neg,NewPos),%denois the positive values
     sort(AllExamples, Sorted),%sort all values to define the numerical range and remove noises -> [1,2,1] -> [1,2].
     %decrease search space by deviding examples into categories.
     %sort(Pos, PosSorted),
     sort(Neg, NegSorted),
-    groupExamplesAbduction(Sorted,NegSorted,Range,[],[],G),
+    groupExamplesAbduction(Sorted,NegSorted,Telorance,[],[],G),
     %defineRoot(G,Root), Removing defineRoot for now, as using it doesn't make any changes on search complexity
     findall(Preds,defineBranches(G,[],Preds),AllPreds),
+    %write(AllPreds),
     proveAll(AllPreds,NegSorted,[],Rules),
     mostGeneral(Rules,0,_,Rule),
     maplist(pprint,Rule).
