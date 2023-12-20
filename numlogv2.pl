@@ -6,7 +6,7 @@
 
 :- module(numlog, [learn/2,learn/3,user:eq/2,user:leq/2,user:geq/2,user:inRange/2]).
 %configuration
-
+epsilon(0.0001).
 
 %Background knowledge
 round(X,Y,D) :- Z is X * 10^D, round(Z, ZA), Y is ZA / 10^D.%disabled as two value may be closed to each other
@@ -65,7 +65,6 @@ groupExamples([H|T],[NH|NT],Temp,Group,Group2):-
 
 mean(A,Len,Mean):-
     sumlist(A, Sum),
-    length(A, Len),
     Mean is Sum / Len.
 
 sigma([],_,Sigma,Sigma).
@@ -73,10 +72,35 @@ sigma([H|T],Mean,Temp,Sigma):-
     Temp1 is (H - Mean)**2 + Temp,
     sigma(T,Mean,Temp1,Sigma).
 
+linespace(Min,Max,Number,Distribute):-
+    R is Max - Min,
+    Step is R / Number,
+    distribute(Min,Step,Max,[Min],Distribute).
+
 std(A,Mean,Len,Std):-
+    length(A, Len),
     mean(A,Len,Mean),
-    sigma(A,Mean,0,Sigma),
-    Len1 is Len - 1,
+    (Len =< 1 ->
+    (epsilon(Eps),
+    [H|_] = A,
+    Min is H - Eps,
+    Max is H + Eps,
+    linespace(Min,Max,10,Aall),
+    Len1 = 9
+        );
+    (
+        
+        Len >= 10 ->(
+            Aall = A,
+        Len1 is Len - 1);
+        (
+        min_list(A, Min),
+        max_list(A, Max),
+        linespace(Min,Max,10,Aall),
+        Len1 = 9)
+    )),
+    sigma(Aall,Mean,0,Sigma),
+    %Len1 is Len - 1,
     Temp is Sigma / Len1,
     sqrt(Temp, Std).
 
@@ -108,11 +132,6 @@ distribute(Min,Step,Max,Arr,Arr1):-
     (append(Arr,[Max],Arr2),
     distribute(_,0,_,Arr2,Arr1))).
 
-linespace(Min,Max,Number,Distribute):-
-    R is Max - Min,
-    Step is R / Number,
-    distribute(Min,Step,Max,[Min],Distribute).
-
 
 intersect(StartingPoint,Mean1,Mean2,Std1,Std2, Increment,Intersect):-
     pdf(StartingPoint,Mean1,Std1,PDF),
@@ -123,7 +142,7 @@ intersect(StartingPoint,Mean1,Mean2,Std1,Std2, Increment,Intersect):-
     intersect(StartingPoint1,Mean1,Mean2,Std1,Std2, Increment,Intersect);
     Intersect = StartingPoint1).
 
-%///////////////////////////////////End of threshold analysis////////////////////////////////////////////////////
+%///////////////////////////////////End of threshold analysis////////////////////
 
 %generating hypothesises using Top-down approach 
 %                          Root(leq, eq, [])
@@ -249,9 +268,10 @@ memberOf([H|T],Neg):-
 
 abductionProcess([],_,FinalSamples,_,FinalSamples).
 abductionProcess([H|T],Neg,NewSamples,Prev,FinalSamples):-
-    std(H,Mean1,_,Std1),
+    
     ([H1|_] = T ->
     (
+    std(H,Mean1,_,Std1),
     std(H1,Mean2,_,Std2),
     StartingPoint is (Mean1 + Mean2) / 2,
     intersect(StartingPoint,Mean1,Mean2,Std1,Std2,0.0001,Intersect),
@@ -310,3 +330,4 @@ learn(Pos,Neg,threshold):-
     mostGeneral(Rules,0,_,Rule),
     maplist(pprint,Rule,Probabilities).
 
+%learn(Pos,Neg,Header,threshold):-
