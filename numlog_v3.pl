@@ -5,10 +5,10 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-:- module(numlog, [learn/2,learn/3,learn/4,user:eq/2,user:leq/2,user:geq/2,user:inRange/2,user:epsilon/1,max_clause/1]).
+:- module(numlog, [learn/2,learn/3,learn/4,user:eq/2,user:leq/2,user:geq/2,user:inRange/2,user:epsilon/1,max_clauses/1]).
 %configuration
 user:epsilon(0.0001).
-max_clause(6).
+max_clauses(4).
 
 %Background knowledge
 round(D,X,Y) :- Z is X * 10^D, round(Z, ZA), Y is ZA / 10^D.
@@ -215,7 +215,7 @@ pprint(H):-
     H =.. [F,_,V],
     numbervars(A, 0, _),
     H1 =.. [F,A,V],
-    format('value(~w):-~n ~40t ~w.~n~n',[A,H1]).
+    format('~w.~n',[H1]).
 
 
 %///////////learning with new values/////////////////////////
@@ -294,6 +294,7 @@ defineBranches([H1|T1],L1,L_1):-
 
 
 hypothesisSpace(0,[],[]).
+hypothesisSpace(_,[],[]).
 %hypothesisSpace(0,_,[]).
 hypothesisSpace(N,[X|T],[X|Comb]) :-
     N>0,
@@ -310,10 +311,9 @@ hypothesisSpace([_|T],T2) :-
     hypothesisSpace(T,T2).
 
 learn(Pos,Neg):-
-    defineBranches(Pos,[],L1),
-    max_clause(Max),
-    (length(L1,L),L > Max  ->hypothesisSpace(Max,L1,Rule);
-    hypothesisSpace(L1,Rule)),
+    max_clauses(Max),
+    %(length(L1,L),L > Max  -> hypothesisSpace(Max,L1,Rule);
+    hypothesisSpace(Max,Pos,Rule),
     %length(Rule,L),
     %L =< Max,
     prove(Rule,Neg,_,Rule),
@@ -341,11 +341,11 @@ learn(Pos,Neg,threshold):-
     
     once(groupExamplesAbc(Sorted,NegSorted,[],[],[],G,0,0,[],_)),%last argument is probablity, add this feature in the future
     once(abductionProcess(G,NegSorted,[],_,G1)),
-    
     %length(AllExamples,SamplesLen),
     %probabilities(Prob,G1,SamplesLen,[],Probabilities),
     %defineRoot(G,Root), Removing defineRoot for now, as using it doesn't make any changes on search complexity
-    learn(G1,NegSorted).
+    defineBranches(G1,[],L1),
+    learn(L1,NegSorted).
 
 learn(Pos,Neg,Method,epsilon(Eps)):-
     abolish(user:epsilon/1),
