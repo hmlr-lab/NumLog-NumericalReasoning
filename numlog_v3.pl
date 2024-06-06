@@ -304,11 +304,11 @@ hypothesisSpace(N,[_|T],Comb) :-
     N>0,
     hypothesisSpace(N,T,Comb).
 
-hypothesisSpace([],[]).
-hypothesisSpace([H|T],[H|T2]) :-
-    hypothesisSpace(T,T2).
-hypothesisSpace([_|T],T2) :-
-    hypothesisSpace(T,T2).
+%hypothesisSpace([],[]).
+%hypothesisSpace([H|T],[H|T2]) :-
+%    hypothesisSpace(T,T2).
+%hypothesisSpace([_|T],T2) :-
+%    hypothesisSpace(T,T2).
 
 learn(Pos,Neg):-
     max_clauses(Max),
@@ -328,7 +328,8 @@ learn(Pos,Neg,normal):-
     %sort(Pos, PosSorted),
     sort(Neg, NegSorted),
     groupExamples(Sorted,NegSorted,[],[],G),
-    learn(G,NegSorted).
+    defineBranches(G,[],L1),
+    learn(L1,NegSorted).
 
 learn(Pos,Neg,threshold):-
     %maplist(round(3),Pos,RPos),
