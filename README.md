@@ -7,7 +7,7 @@ Author:  Daniel Cyrus
 <p>NumLog aims to generate rules that are both highly accurate and easily understandable, ensuring low complexity for better explainability.</p>
 <h4>Usage</h4>
 1. Copy and paset NumLogILP to your current project directory
-2.import NumLog as a module in you Prolog code:
+2.import NumLog as a module in you Prolog code:<br>
 ```prolog
 :- use_module('NumLogILP').
 ```
