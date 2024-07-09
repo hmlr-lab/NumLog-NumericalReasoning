@@ -14,7 +14,7 @@ Author:  Daniel Cyrus
 :-use_module('NumLogILP').
 ```
 
-3.If you want to learn only from a single numerical values easily use learn(Pos,Neg,Method):
+3. To learn only from a single numerical values easily use learn(Pos,Neg,Method):
 
 ``` Prolog
 :-
