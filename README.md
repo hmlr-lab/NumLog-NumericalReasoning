@@ -1,5 +1,6 @@
 # NumLog : A Numerical Reasoning using ILP
 The learning methodology for numerical anaylsis <br>
+This repository is based on the paper in <a href="">Link</a>
 Author:  Daniel Cyrus
 
 <p>Numlog is a learning system to explain and generate a sort of numerical values. Earlier versions of numlog (e.g. numlog.pl, numlog_v2.pl and numlog_v3.pl) are based on logic approach </p>
