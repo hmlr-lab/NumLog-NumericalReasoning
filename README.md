@@ -50,4 +50,8 @@ cancer(A):-
 #### Citation and contact
 This work is based on the <a href="">paper</a>, for any issues or question please contact author (d.cysur@surrey.ac.uk).
 If you using this work please cite:
-<Citation and paper link will be provided soon>
+D. Cyrus, D. Varghese, and A. Tamaddoni-Nezhad,
+An Inductive Logic Programming approach for feature-range discovery
+,
+In Proc. of the 33rd Int. Conf. on ILP
+, Springer, 2024 (Accepted)
