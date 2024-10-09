@@ -12,9 +12,11 @@ Author:  Daniel Cyrus
 2.import NumLog as a module in you Prolog code:<br>
 
 ``` Prolog
-:-use_module('NumLogILP').
-```
+:-style_check(-discontiguous).
+:-use_module(numlogNew).
 
+numlog:combination(0.1).
+```
 3. To learn only from a single numerical values easily use learn(Pos,Neg,Method):
 
 ``` Prolog
