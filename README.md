@@ -8,8 +8,8 @@ Author:  Daniel Cyrus
 <p>NumLog aims to generate rules that are both highly accurate and easily understandable, ensuring low complexity for better explainability.</p>
 
 #### Usage
-1. Copy and paset NumLogILP to your current project directory.<br>
-2.import NumLog as a module in you Prolog code:<br>
+1. Copy and paset NumLogNew to your current project directory.<br>
+2.import NumLog as a module in your Prolog code:<br>
 
 ``` Prolog
 :-style_check(-discontiguous).
