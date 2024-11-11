@@ -9,7 +9,7 @@ Author:  Daniel Cyrus
 
 #### Usage
 1. Copy and paset NumLogNew to your current project directory.<br>
-2.import NumLog as a module in your Prolog code:<br>
+2. Import NumLog as a module in your Prolog code:<br>
 
 ``` Prolog
 :-style_check(-discontiguous).
