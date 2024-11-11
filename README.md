@@ -16,6 +16,7 @@ Author:  Daniel Cyrus
 :-use_module(numlogNew).
 
 numlog:combination(0.1).
+numlog:maxClause(3).
 ```
 3. To learn only from a single numerical values easily use learn(Pos,Neg,Method):
 
