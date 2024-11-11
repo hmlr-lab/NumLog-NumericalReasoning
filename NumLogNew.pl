@@ -4,23 +4,24 @@
 %                                            The HMLR lab                                               %
 %                     for more detail see the paper http://                                             %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-:- module(numlog, [learn/5,combination/1,learnFromFile/2]).
+:- module(numlog, [learn/5,combination/1,maxClause/1,learnFromFile/2]).
 
 :-op(500, xfy, user:(±)). 
 :-op(500, xfy, =>).
 
 :-dynamic epsilon/1.
 :-dynamic combination/1.
+:-dynamic maxClause/1.
 
-:-dynamic acc/1.
-:-dynamic rule/1.
+:-dynamic numlogacc/1.
+:-dynamic numlogrule/1.
 
 :-dynamic(user:pos/1).
 :-dynamic(user:neg/1).
 
 
-acc(0).
-rule([]).
+numlogacc(0).
+numlogrule([]).
 
 pprint([],Acc):-writeln('--------------------------------'),format('Accuracy: ~2f~n',[Acc]).    
 pprint([H|T],Acc):-
@@ -166,10 +167,11 @@ setEpsilon(AllExamples):-
   retractall(epsilon(_)),
   [Prev|T] =AllExamples,
   once(calculateEpsilon(Prev,T,10,EPS)),
-  EPS1 is EPS / 10,
+  EPS1 is (EPS / 10) + 0.000001,
+
   %round(5,EPS1,EPS2),
   assert(epsilon(EPS1)),
-  format('\nEpsilon has set to ~f \n',[EPS1]).
+  format('Epsilon has set to ~8f \n',[EPS1]).
 %-----------------------------------Process examples--------------------------------------------------------
 groupExamples([],[],L,L1,G,G1):-
     (L \= [] -> append(G,[L],G2);G2 = G),
@@ -334,7 +336,6 @@ showBestHypothesis([[Rule,TP,TN]|T],Len,Acc,Rule2,Acc3,Rule3):-
     showBestHypothesis(T,Len,Acc2,Rule1,Acc3,Rule3).
 
 learn(Pos,Neg,Rule,Acc,Print):-
-    write('Analysing numbers...'),
     append(Pos, Neg, AllExamples),
     sort(AllExamples, Sorted),
     setEpsilon(Sorted),
@@ -345,7 +346,7 @@ learn(Pos,Neg,Rule,Acc,Print):-
     abduceExamples(G,_,[],Abd),
     totalCoverage(Abd,Eps,TotCov,TotLen),
     generalise(Abd,_,TotCov,TotLen,[],Generalised),
-    write('Compressing values...'),
+    write('\nCombining values...'),
     %write('Generating hypothesis space...'),
     length(Generalised,Len),
     defineBranches(Generalised,[],Branched),
@@ -356,81 +357,77 @@ learn(Pos,Neg,Rule,Acc,Print):-
         showBestHypothesis(BagRules,LenExamples,0,_);
         showBestHypothesis(BagRules,LenExamples,0,_,Acc,Rule)).
 
-
-
-%---------------------------------Convert from array to rule-----------------------------------
-disjunction([],[],Feature,Chain,Features,Rule,Features1,Rule1):-
-    nonvar(Feature)->
-    (append(Rule,[Chain],Rule1),append(Features,[[Feature]],Features1));
-    (Rule1=Rule,Features1=Features).
-disjunction([H|T],[HF|TF],Feature,Chain,Features,Rule,Features2,Rule2):-
-    ((not(member(Feature,HF)),nonvar(Feature))->
-    (append([Feature],HF,HF1),append(H,Chain,H1),Feature1=_);
-    (H1=H,HF1=HF,Feature1=Feature)),
-    append(Features,[HF1],Features1),
-    append(Rule,[H1],Rule1),
-    disjunction(T,TF,Feature1,Chain,Features1,Rule1,Features2,Rule2).
-
-convertToRule([],_,_,Rule,Rule).
-convertToRule([H|T],Atom,Features,Rule,Rule1):-
-    H=..[R,Feature,B],
-    Chain1 =..[Feature,Atom,_B],
-    Chain2 =..[R,_B,B],
-    disjunction(Rule,Features,Feature,[Chain1,Chain2],[],[],Features2,Rule2),
-    convertToRule(T,Atom,Features2,Rule2,Rule1).
-
-listToTuple([], true).  
-listToTuple([Predicate], Predicate).  
-listToTuple([Predicate1, Predicate2 | Rest], (Predicate1, Tuple)) :-
-    listToTuple([Predicate2 | Rest], Tuple).
-
-getAccuracy([],_,_,Acc,Acc).
-getAccuracy([H|T],_Atom,Val,Acc,Acc1):-
-    listToTuple(H,Tuple),
-    _Atom=Val,
-    (Tuple->
-    Acc2 is Acc + 1;Acc2=Acc),
-    getAccuracy(T,_Atom,Val,Acc2,Acc1).
-
-getRuleAccuracy(Rule,Example,Acc):-
-    convertToRule(Rule,_Atom,[],[],R),
-    getAccuracy(R,_Atom,Example,0,Acc).
-
-
 %----------------------------------------Find best rule----------------------------------------
-findAcc(List,Examples, Sum) :-
-    List \= [] ->
-    (
-    maplist(getRuleAccuracy(List),Examples,Acc),
-    sum_list(Acc, Sum));Sum=0.
 
-subset([], []).
-subset([Elem | Rest], [Elem | SubList]) :-
-    subset(Rest, SubList).
-subset([_ | Rest], SubList) :-
-    subset(Rest, SubList).
+combinations(0, _, []).
+combinations(N, [X|Xs], [X|Ys]) :-
+    N > 0,
+    N1 is N - 1,
+    combinations(N1, Xs, Ys).
+combinations(N, [_|Xs], Ys) :-
+    N > 0,
+    combinations(N, Xs, Ys).
+
+partition([], []).
+partition(List, [Head | TailPartition]) :-
+    append(Head, Tail, List),
+    Head \= [],
+    partition(Tail, TailPartition).
+
+convertToRule([], fail). % No elements case
+convertToRule([Conj], Rule) :- conjunction(Conj, Rule). % Single list case
+convertToRule([Conj | Rest], (Rule ; RestRule)) :- 
+    conjunction(Conj,Rule),
+    convertToRule(Rest, RestRule).
+
+% Helper predicate to convert each inner list to a conjunction
+conjunction([], true).
+conjunction([H], (Chain1,Chain2)):-  
+    H=..[R,Feature,B],
+    Chain1 =..[Feature,_,C],
+    Chain2 =..[R,C,B].
+    
+conjunction([H | T], (Chain1,Chain2 , Rest)) :-
+    H=..[R,Feature,B],
+    Chain1 =..[Feature,_,C],
+    Chain2 =..[R,C,B],
+    conjunction(T, Rest).
+
+callToCheckPos(Rule,Example,Y):-
+    term_string(Rule, String),
+    term_string(NewRule,String),
+    free_variables(NewRule, Variables),
+    nth0(0,Variables,D),
+    D=Example,
+    (NewRule)->
+   Y=1;Y=0.
+
+callToCheckNeg(Rule,Example,Y):-
+    term_string(Rule, String),
+    term_string(NewRule,String),
+    free_variables(NewRule, Variables),
+    nth0(0,Variables,D),
+    D=Example,
+    not((NewRule))->
+   Y=1;Y=0.
+
+getAccuracy(Rule,Pos,Neg,Tot,R,Acc):-
+       convertToRule(Rule,R),
+       maplist(callToCheckPos(R),Pos,L),
+       maplist(callToCheckNeg(R),Neg,L1),
+       sum_list(L, Sum),
+       sum_list(L1, Sum1),
+       Acc is (Sum+Sum1)/Tot.
 
 
-removeAndAdd(CurrentMax,Acc,Rule):-
-    retractall(acc(CurrentMax)),assert(acc(Acc)),rule(A),retractall(rule(A)),assert(rule(Rule)).
 
-searchForTheBestRule(List,Pos,Neg,LenPos,LenNeg) :-
-    subset(List, SubList),
-    acc(CurrentMax), 
-    length(SubList,Len),Len<4,
-    findAcc(SubList,Pos,SumPos),
-    (SumPos > 0 ->
-    (findAcc(SubList,Neg,SumNeg),Sum1 is (SumPos + (LenNeg - SumNeg))/(LenPos+LenNeg));Sum1=0),
-    (Sum1 > CurrentMax ->              
-    removeAndAdd(CurrentMax,Sum1,SubList)
-    ;                                
-    true
-    ),
-    fail.                            
-searchForTheBestRule(_,_,_,_,_). 
-
-
-
+getTheBestRule([],LAcc,LRule):-
+    format('Accuracy:~w \n ~w',[LAcc,LRule]).
+getTheBestRule([R=>Acc|T],LAcc,LRule):-
+    (Acc>LAcc ->
+    Acc2 = Acc,R2=R ; Acc2=LAcc,R2=LRule),
+    getTheBestRule(T,Acc2,R2).
+    
 %-------------------------------------------------------------Multi-calss learning-----------------
 appendWithVar([],_,NewArr,NewArr).
 appendWithVar([H|T],R,NewArr,NewArr1):-
@@ -441,6 +438,7 @@ appendWithVar([H|T],R,NewArr,NewArr1):-
     
 batchLearn([],_,AllRules,AllRules).    
 batchLearn([R=>APos|T],ArrNeg,AllRules,AllRules1):-
+        format('Analysing feature value:~w\n',[R]),
         member(R=>ANeg,ArrNeg),
         learn(APos,ANeg,Rule,_,give),
         %writeln(R),writeln(Rule),
@@ -448,8 +446,7 @@ batchLearn([R=>APos|T],ArrNeg,AllRules,AllRules1):-
         batchLearn(T,ArrNeg,NewArr,AllRules1).
 
 clausesInFile(File,H1,A,V) :-
-    absolute_file_name(File, AbsFileName),
-    predicate_property(H, file(AbsFileName)),
+    absolute_file_name(File, AbsFileName),predicate_property(H, file(AbsFileName)),
     clause(H,true),
     H =..[H1,A,V].
 
@@ -472,23 +469,51 @@ getAllValues(File,[H|T],Ex,Ex1):-
     addToExamples(All,Ex,FinalEx),
     getAllValues(File,T,FinalEx,Ex1).
 
-learnFromFile(BKFile,ExampleFile):-
+
+
+generateInterests(BKFile,ExampleFile,Rules,ArrPos,ArrNeg,Tot):-
+     %consult(BKFile),
+    %consult(ExampleFile),
     [BKFile],
     [ExampleFile],
     writeln('Processing file and numerical values...'),
     findall(A,(pos(V),V=..[_,A]),ArrPos),
     findall(A,(neg(V),V=..[_,A]),ArrNeg),
+   
     getAllValues(BKFile,ArrPos,[],AllPosValues),
     getAllValues(BKFile,ArrNeg,[],AllNegValues),
     length(ArrPos,LenPos),length(ArrNeg,LenNeg),
+      
+   
     batchLearn(AllPosValues,AllNegValues,[],Rules),
-    writeln('Generating Final Rule, this may take from few seconds to few minutes...'),
-    searchForTheBestRule(Rules,ArrPos,ArrNeg,LenPos,LenNeg),
-    rule(BestSubList),
-    acc(MaxSum),
-    write('Final best rule: '), writeln(BestSubList),
-    write('Accuracy: '), writeln(MaxSum),
-    removeAndAdd(MaxSum,0,[]).
+    Tot is LenPos+LenNeg,
+
+    length(Rules,LRu),
+    format('Number of interesting features:~w \nGenerating hypothesis space and looking for a best rule...',[LRu]).
+
+
+learnFromFile(BKFile,ExampleFile):-
+    generateInterests(BKFile,ExampleFile,Rules,ArrPos,ArrNeg,Tot),
+
+    maxClause(MaxClause),
+    
+    findall(R => Acc, 
+            (between(1, MaxClause, N), combinations(N, Rules, Comb),partition(Comb,Comb1),getAccuracy(Comb1,ArrPos,ArrNeg,Tot,R,Acc)), 
+            Result),
+            
+    length(Result,LR),
+    format('Hypothesis space:~w \n',[LR]),
+    getTheBestRule(Result,0,[]).
+
+    %writeln('Generating Final Rule, this may take from few seconds to few minutes...'),
+    %searchForTheBestRule(Rules,ArrPos,ArrNeg,LenPos,LenNeg),
+    %numlogrule(BestSubList),
+    %numlogacc(MaxSum),
+    %write('Final best rule: '),convertToRule(BestSubList,_Atom,[],[],R), 
+    %format('rule(~w):-~w\n',[_Atom,R]),
+    %writeln(R),
+    %write('Accuracy: '), writeln(MaxSum),
+    %removeAndAdd(0,[]).
     
 
 %in the futur add combination of disjunction rules using(memebr(x,list1), ...) 
