@@ -15,8 +15,9 @@ Author:  Daniel Cyrus
 :-style_check(-discontiguous).
 :-use_module(numlogNew).
 
-numlog:combination(0.1).
-numlog:maxClause(3).
+numlog:combination(0.15).
+numlog:maxClause(4).
+numlog:minClause(1).
 ```
 3. To learn only from a single numerical values easily use learn(Pos,Neg,Method):
 
