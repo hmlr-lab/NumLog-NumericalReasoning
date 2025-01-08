@@ -4,7 +4,7 @@ This repository is based on the paper in <a href="">Link</a><br>
 Main author:  Daniel Cyrus
 
 <p>Numlog is a learning system to explain and generate a sort of numerical values. Earlier versions of numlog (e.g. numlog.pl, numlog_v2.pl and numlog_v3.pl) are based on logic approach </p>
-<p>To use the lates version and for ILP approaches, please use numlogILP.pl</p>
+<p>To use the latest version and for ILP approaches, please use numlog.pl</p>
 <p>NumLog aims to generate rules that are both highly accurate and easily understandable, ensuring low complexity for better explainability.</p>
 
 #### Usage
