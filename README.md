@@ -1,4 +1,4 @@
-# NumLog : A Numerical Reasoning using ILP
+# NumLog: Numerical-Symbolic Learning and Reasoning 
 The learning methodology for numerical anaylsis <br>
 This repository is based on the paper in <a href="">Link</a><br>
 Main author:  Daniel Cyrus
