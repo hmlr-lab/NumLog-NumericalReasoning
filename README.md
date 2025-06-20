@@ -32,7 +32,7 @@ or
 :-
    Pos=[1,2,3,5,6,8,9],
    Neg = [4,7],
-   learn(Pos,Neg,R,Acc,npprint),
+   learn(Pos,Neg,R,Acc,noprint),
    write(R),nl,
    write(Acc),nl.
 ```
