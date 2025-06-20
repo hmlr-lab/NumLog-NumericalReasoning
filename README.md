@@ -25,9 +25,17 @@ numlog:minClause(1).
 :-
    Pos=[1,2,3,5,6,8,9],
    Neg = [4,7],
-  learn(Pos,neg,threshold).
+  learn(Pos,Neg,_,_,print).
 ```
-
+or
+``` Prolog
+:-
+   Pos=[1,2,3,5,6,8,9],
+   Neg = [4,7],
+   learn(Pos,Neg,R,Acc,npprint),
+   write(R),nl,
+   write(Acc),nl.
+```
 To learn from multi class values create a background and an example file and run below code:
 
 ``` Prolog
