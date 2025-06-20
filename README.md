@@ -13,7 +13,7 @@ Main author:  Daniel Cyrus
 
 ``` Prolog
 :-style_check(-discontiguous).
-:-use_module(numlogNew).
+:-use_module(numlog).
 
 numlog:combination(0.15).
 numlog:maxClause(4).
