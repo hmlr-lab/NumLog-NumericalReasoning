@@ -1,4 +1,5 @@
 # NumLog: Numerical-Symbolic Learning and Reasoning 
+### This version is about to be deprecated, as we are preparing to release a new version with advanced learning methods.
 The learning methodology for numerical anaylsis <br>
 This repository is based on the paper in <a href="https://hmlr-lab.github.io/pdfs/NumLog_ILP2024.pdf">Link</a><br>
 Main author:  Daniel Cyrus
