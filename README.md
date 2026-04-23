@@ -62,6 +62,6 @@ cancer(A):-
 
 #### Citation and contact
 For any issues or question please contact author (d.cyrus@surrey.ac.uk).<br>
-If you are suing NumLog in your work, please cite:<br>
+If you are using NumLog in your work, please cite:<br>
 D. Cyrus, D. Varghese, and A. Tamaddoni-Nezhad, <b>An Inductive Logic Programming approach for feature-range discovery</b>,
 In Proc. of the 33rd Int. Conf. on ILP , Springer, 2024 
